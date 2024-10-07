@@ -22,3 +22,5 @@ documento = {
 resultado = collection.insert_one(documento)
 
 print(f"Documento inserido com ID: {resultado.inserted_id}")
+
+
