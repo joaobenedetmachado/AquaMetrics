@@ -49,3 +49,6 @@ Este projeto desenvolve uma plataforma IoT para monitoramento em tempo real da q
 - **Python** no backend para comunicação entre ESP32 e MongoDB
 
 ---
+
+##
+<a href="https://aqua-metrics.vercel.app/">aqua-metrics.vercel.app</a>
