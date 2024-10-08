@@ -19,19 +19,35 @@ h1 {
   margin-top: 20px;
 }
 
-.card {
+.card-ph, .card-tds, .card-temp {
   background-color: white;
   border: 1px solid #ccc;
   border-radius: 8px;
   padding: 20px;
   width: 150px;
+  background-size: cover; /* Faz a imagem cobrir toda a área */
+  background-position: center; /* Centraliza a imagem */
+  background-repeat: no-repeat; /* Evita repetição da imagem */
 }
 
-.card h2 {
+.card-ph {
+  background-image: url(./imageph.png);
+}
+
+.card-tds {
+  height: 200px;
+  background-image: url(./imagetds.png);
+}
+
+.card-temp {
+  background-image: url(./imagetemp.png);
+}
+
+h2 {
   margin-bottom: 10px;
 }
 
-.card p {
+p {
   font-size: 24px;
   font-weight: bold;
 }
