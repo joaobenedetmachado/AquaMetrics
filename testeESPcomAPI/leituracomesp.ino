@@ -1,60 +1,48 @@
 #include <WiFi.h>
 #include <HTTPClient.h>
-#include <ArduinoJson.h>
 
-// Configurações da rede Wi-Fi
-const char* ssid = "NOME_DA_SUA_REDE";
-const char* password = "SENHA_DA_SUA_REDE";
-
-// URL da sua API (que vai se comunicar com o MongoDB)
-String apiEndpoint = "http://api-seu-dominio.com/insertdata"; // Coloque a URL da API que irá interagir com o MongoDB
-
-// Variáveis para os dados a serem enviados
-String date = "2024-10-07";
-float ph = 7.2;
-int tds = 300;
-float temp = 25.5;
+// Defina o nome da rede Wi-Fi e a senha
+const char* ssid = "NOME_DA_SUA_REDE";  // Substitua pelo SSID da sua rede
+const char* password = "SENHA_DA_SUA_REDE";  // Substitua pela senha da sua rede
 
 void setup() {
   Serial.begin(115200);
-  
+
   WiFi.begin(ssid, password);
   while (WiFi.status() != WL_CONNECTED) {
     delay(1000);
-    Serial.println("Conectando ao WiFi...");
+    Serial.println("Conectando ao Wi-Fi...");
   }
-  Serial.println("Conectado ao WiFi!");
-}
+  Serial.println("Wi-Fi conectado!");
 
-void loop() {
+  // Verifica se está conectado antes de enviar a requisição
   if (WiFi.status() == WL_CONNECTED) {
     HTTPClient http;
 
-    http.begin(apiEndpoint);
+    // URL da API
+    http.begin("https://aqua-metrics-api.vercel.app/documentos");
+
+    // Definindo o tipo de conteúdo
     http.addHeader("Content-Type", "application/json");
 
-    StaticJsonDocument<200> doc;
-    doc["data"] = date;
-    doc["ph"] = ph;
-    doc["tds"] = tds;
-    doc["temp"] = temp;
-
-    String jsonData;
-    serializeJson(doc, jsonData);
+    String jsonData = "{\"data\":\"2021-10-07 10:00:00\",\"ph\":\"7\",\"tds\":\"20\",\"temp\":\"20\"}";
 
     int httpResponseCode = http.POST(jsonData);
 
     if (httpResponseCode > 0) {
       String response = http.getString();
-      Serial.println("Dados enviados com sucesso: " + response);
+      Serial.println("Resposta do servidor: " + response);
     } else {
-      Serial.println("Erro ao enviar dados. Código HTTP: " + String(httpResponseCode));
+      Serial.println("Erro na requisição: " + String(httpResponseCode));
     }
 
+    // Finalizando a conexão
     http.end();
   } else {
-    Serial.println("WiFi desconectado");
+    Serial.println("Erro ao conectar ao Wi-Fi");
   }
+}
 
-  delay(10000);
+void loop() {
+  // Não precisa de código no loop para este exemplo
 }
