@@ -1,6 +1,6 @@
 async function buscarUltimaLeitura() {
   try {
-    const response = await fetch('https://aqua-metrics-api.vercel.app/documentos/ultimo');
+    const response = await fetch('https://aquametrics-api.vercel.app/documentos/ultimo');
     const data = await response.json();
 
     const ultimoDocumento = data.documento;
