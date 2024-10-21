@@ -1,48 +1,88 @@
 #include <WiFi.h>
 #include <HTTPClient.h>
 
-// Defina o nome da rede Wi-Fi e a senha
-const char* ssid = "NOME_DA_SUA_REDE";  // Substitua pelo SSID da sua rede
-const char* password = "SENHA_DA_SUA_REDE";  // Substitua pela senha da sua rede
+const char* ssid = "SATC IOT";
+const char* password = "IOT2024@#";
+const char* serverName = "https://aquametrics-api.vercel.app/documentos";
+
+const int potPin = 34;  // Sensor pH
+const int tempPin = 35; // Sensor temperatura
+float ph;
+float temperature;
+
+// Função para fazer a média de leituras para reduzir ruído
+float getAverageTemperature() {
+  float sum = 0;
+  const int numReadings = 10;
+  
+  for(int i = 0; i < numReadings; i++) {
+    int tempValue = analogRead(tempPin);
+    float voltage = tempValue * (3.3 / 4095.0); // Converte para voltagem
+    // Para LM35: cada 10mV = 1°C
+    sum += (voltage * 100.0); // Multiplica por 100 para converter voltage para celsius
+    delay(10);
+  }
+  
+  return sum / numReadings;
+}
 
 void setup() {
   Serial.begin(115200);
-
+  
+  // Configurar resolução do ADC (opcional, mas pode melhorar a precisão)
+  analogSetWidth(12); // Define resolução de 12 bits
+  analogSetAttenuation(ADC_11db); // Define atenuação para permitir leitura até 3.3V
+  
+  WiFi.mode(WIFI_STA);
   WiFi.begin(ssid, password);
+  
+  Serial.print("Conectando à rede Wi-Fi");
   while (WiFi.status() != WL_CONNECTED) {
-    delay(1000);
-    Serial.println("Conectando ao Wi-Fi...");
+    delay(500);
+    Serial.print(".");
   }
-  Serial.println("Wi-Fi conectado!");
-
-  // Verifica se está conectado antes de enviar a requisição
-  if (WiFi.status() == WL_CONNECTED) {
-    HTTPClient http;
-
-    // URL da API
-    http.begin("https://aqua-metrics-api.vercel.app/documentos");
-
-    // Definindo o tipo de conteúdo
-    http.addHeader("Content-Type", "application/json");
-
-    String jsonData = "{\"data\":\"2021-10-07 10:00:00\",\"ph\":\"7\",\"tds\":\"20\",\"temp\":\"20\"}";
-
-    int httpResponseCode = http.POST(jsonData);
-
-    if (httpResponseCode > 0) {
-      String response = http.getString();
-      Serial.println("Resposta do servidor: " + response);
-    } else {
-      Serial.println("Erro na requisição: " + String(httpResponseCode));
-    }
-
-    // Finalizando a conexão
-    http.end();
-  } else {
-    Serial.println("Erro ao conectar ao Wi-Fi");
-  }
+  Serial.println("\nConectado à rede Wi-Fi!");
 }
 
 void loop() {
-  // Não precisa de código no loop para este exemplo
+  if (WiFi.status() == WL_CONNECTED) {
+    // Leitura do pH
+    int phValue = analogRead(potPin);
+    float phVoltage = phValue * (3.3 / 4095.0);
+    ph = (3.3 * phVoltage);
+    
+    // Leitura da temperatura com média de valores
+    temperature = getAverageTemperature();
+    
+    // Debug das leituras
+    Serial.print("Temperatura Raw ADC: ");
+    Serial.print(analogRead(tempPin));
+    Serial.print(" | Temperatura °C: ");
+    Serial.println(temperature);
+    
+    String dataHora = "2024-03-21 14:00:00";
+    
+    HTTPClient http;
+    http.begin(serverName);
+    http.addHeader("Content-Type", "application/json");
+    
+    String jsonPayload = "{\"data\": \"" + dataHora + "\", "
+                        "\"ph\": " + String(ph, 2) + ", "
+                        "\"tds\": 1200.2, "
+                        "\"temp\": " + String(temperature, 2) + "}";
+    
+    int httpResponseCode = http.POST(jsonPayload);
+    
+    if (httpResponseCode > 0) {
+      Serial.println("Dados enviados com sucesso!");
+      Serial.println("Temperatura: " + String(temperature, 2) + "°C");
+    } else {
+      Serial.print("Erro ao enviar os dados. Código: ");
+      Serial.println(httpResponseCode);
+    }
+    
+    http.end();
+  }
+  
+  delay(2000);
 }
