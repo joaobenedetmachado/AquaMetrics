@@ -1,19 +1,32 @@
 #include <WiFi.h>
 #include <HTTPClient.h>
+#include <OneWire.h>
+#include <DallasTemperature.h>
 
+// Configuração do Wi-Fi
 const char* ssid = "SATC IOT";
 const char* password = "IOT2024@#";
 const char* serverName = "https://aquametrics-api.vercel.app/documentos";
 
+// Pinos dos sensores
 const int potPin = 34; // Pino para o sensor de pH
-const int tempPin = 35; // Pino para o sensor de temperatura
+#define ONE_WIRE_BUS 35 // Pino para o sensor DS18B20
+
+// Inicialização para o sensor de temperatura DS18B20
+OneWire oneWire(ONE_WIRE_BUS);
+DallasTemperature sensors(&oneWire);
+
 float ph;
 float temperature;
 
 void setup() {
   Serial.begin(115200);
   
-  WiFi.mode(WIFI_STA); // Define explicitamente o modo Station
+  // Inicialização do sensor de temperatura
+  sensors.begin();
+  
+  // Conexão Wi-Fi
+  WiFi.mode(WIFI_STA);
   WiFi.begin(ssid, password);
   
   Serial.print("Conectando à rede Wi-Fi");
@@ -42,39 +55,39 @@ void loop() {
   }
   
   if (WiFi.status() == WL_CONNECTED) {
-    // Leitura dos sensores
-    int phValue = analogRead(potPin); // Leitura do pH
-    float phVoltage = phValue * (3.3 / 4095.0); // Converte leitura para voltagem
+    // Leitura do sensor de pH
+    int phValue = analogRead(potPin);
+    float phVoltage = phValue * (3.3 / 4095.0);
     ph = phVoltage; // Assumindo que a saída do sensor é diretamente a leitura do pH
     
-    // Leitura da temperatura
-    int tempValue = analogRead(tempPin);
-    float tempVoltage = tempValue * (3.3 / 4095.0);
-    // Para LM35: 10 mV/°C, ou seja, multiplicar a voltagem por 100
-    temperature = tempVoltage * 100; 
+    // Leitura do sensor DS18B20
+    sensors.requestTemperatures();
+    temperature = sensors.getTempCByIndex(0); // Obtém a temperatura em °C
+    
+    if (temperature != DEVICE_DISCONNECTED_C) {
+      Serial.print("Temperatura: ");
+      Serial.println(temperature);
+    } else {
+      Serial.println("Falha ao ler temperatura");
+    }
     
     // Obter data e hora atual (você pode implementar NTP aqui)
     String dataHora = "2024-03-21 14:00:00";  
     
+    // Preparação e envio de dados via HTTP
     HTTPClient http;
-    
-    // Configurar timeout mais longo
     http.setConnectTimeout(1000);
     http.setTimeout(1000);
-    
-    // Iniciar conexão com o servidor
     http.begin(serverName);
     http.addHeader("Content-Type", "application/json");
     
-    // Criar payload JSON
     String jsonPayload = "{\"data\": \"" + dataHora + "\", "
-                        "\"ph\": " + String(ph, 2) + ", "
-                        "\"tds\": 1200.2, "
-                        "\"temp\": " + String(temperature, 2) + "}";
+                         "\"ph\": " + String(ph, 2) + ", "
+                         "\"tds\": 1200.2, "
+                         "\"temp\": " + String(temperature, 2) + "}";
     
     Serial.println("Enviando dados: " + jsonPayload);
     
-    // Realizar POST
     int httpResponseCode = http.POST(jsonPayload);
     
     if (httpResponseCode > 0) {
@@ -88,7 +101,6 @@ void loop() {
     }
     
     http.end();
-    
-    delay(1000); // Espera 5 segundos antes da próxima leitura
+    delay(1000); // Espera antes da próxima leitura
   }
 }
