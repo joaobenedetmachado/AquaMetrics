@@ -23,6 +23,7 @@ const char* serverName = "https://aquametrics-api.vercel.app/documentos";
 const float VOLTAGE_REF = 3.3;
 const float OFFSET = 0.4;  // Calibracao para a correcao do valor
 const int SAMPLES = 10;
+const int sensorPinTDS = A0;  // Pino do sensor TDS
 
 OneWire oneWire(TEMPERATURE_PIN);
 DallasTemperature sensors(&oneWire);
@@ -95,6 +96,7 @@ void loop() {
     delay(1000);
   }
 
+
   float ph = LeituraPH();
   Serial.print("pH: ");
   Serial.println(ph, 2);
@@ -103,6 +105,18 @@ void loop() {
   Serial.print("Temperatura: ");
   Serial.println(temperatura, 2);
 
+
+  int valorAnalogico = analogRead(sensorPinTDS);
+  
+  float tensao = valorAnalogico * (5.0 / 1024.0);
+
+  float compensacaoFator = 1.0 + 0.02 * (temperatura - 25.0);
+  float tdsValorTDS = (tensao / compensacaoFator) * 133.42;       
+  
+  Serial.print("TDS: ");
+  Serial.print(tdsValorTDS);
+  Serial.println(" ppm");
+    
   delay(1000);
 
   if (WiFi.status() == WL_CONNECTED) {
@@ -124,11 +138,9 @@ void loop() {
     http.addHeader("Content-Type", "application/json");
 
     String jsonPayload = "{\"data\": \"" + String(dataHora) + "\", "
-                                                              "\"ph\": "
-                         + String(ph, 2) + ", "
-                                           "\"tds\": 1200.2, "
-                                           "\"temp\": "
-                         + String(temperatura, 2) + "}";
+                     "\"ph\": " + String(ph, 2) + ", "
+                     "\"tds\": " + String(tdsValorTDS) + ", "
+                     "\"temp\": " + String(temperatura, 2) + "}";
 
     Serial.println("Enviando dados: " + jsonPayload);
 
