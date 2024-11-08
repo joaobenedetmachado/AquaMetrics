@@ -7,11 +7,11 @@
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
 
-#define SCREEN_WIDTH 128  // Largura da tela OLED
-#define SCREEN_HEIGHT 64  // Altura da tela OLED
+#define SCREEN_WIDTH 128  // largura da tela oled
+#define SCREEN_HEIGHT 64  // altura da tela oled
 #define OLED_RESET -1     // Reset pin (não é necessário para a maioria dos displays OLED)
 
-Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET); // insere os valores na classe 
 
 const char* ssid = "SATC IOT";
 const char* password = "IOT2024@#";
@@ -20,15 +20,15 @@ const char* serverName = "https://aquametrics-api.vercel.app/documentos";
 #define PH_PIN 35          // Pino analógico para o sensor de pH
 #define TEMPERATURE_PIN 2  // Pino de entrada para o sensor de temperatura
 
-const float VOLTAGE_REF = 3.3;
-const float OFFSET = 0.4;  // Calibracao para a correcao do valor
-const int SAMPLES = 10;
+const float OFFSET = 0.4;  //variavel pra calibrar (testar com a agua destilada e fazer a diferenca pra dar 7)
+const int SAMPLES = 10; //quantidade de veses que ele vai dividir pra fazer a media da leitura
+
 const int sensorPinTDS = A0;  // Pino do sensor TDS
 
 OneWire oneWire(TEMPERATURE_PIN);
 DallasTemperature sensors(&oneWire);
 
-// Função para ler o pH
+// func pro PH  
 float LeituraPH() {
   float adc_value = 0;
   for (int i = 0; i < SAMPLES; i++) {
@@ -37,13 +37,13 @@ float LeituraPH() {
   }
   adc_value = adc_value / SAMPLES;
 
-  float voltage = (adc_value * VOLTAGE_REF) / 4095.0;
+  float voltage = (adc_value * 3.3) / 4095.0;
   float ph_value = 3.5 * voltage + OFFSET;
 
   return ph_value;
 }
 
-// Função para ler a temperatura
+// ler a temperatura e retornar e tal
 float LeituraTemperatura() {
   sensors.requestTemperatures();      // Solicita a leitura de temperatura do sensor
   return sensors.getTempCByIndex(0);  // Retorna a temperatura em Celsius
@@ -51,22 +51,22 @@ float LeituraTemperatura() {
 
 void setup() {
   Serial.begin(115200);
-  WiFi.mode(WIFI_STA);  // Define explicitamente o modo Station
-  WiFi.begin(ssid, password);
+  WiFi.mode(WIFI_STA);  // define o modo Station
+  WiFi.begin(ssid, password); // colocar a rede e a senha
 
-  Serial.print("Conectando à rede Wi-Fi");
+  Serial.print("Conectando a rede> ");
   int attempts = 0;
-  while (WiFi.status() != WL_CONNECTED && attempts < 20) {
+  while (WiFi.status() != WL_CONNECTED && attempts < 20) { // tenta conectar por 10 segundos
     delay(500);
     Serial.print(".");
     attempts++;
   }
 
-  if (WiFi.status() == WL_CONNECTED) {
+  if (WiFi.status() == WL_CONNECTED) { // se tiver conectado
     Serial.println("\nConectado à rede Wi-Fi!");
     Serial.print("IP: ");
     Serial.println(WiFi.localIP());
-  } else {
+  } else { // se nao mostra o erro no serial
     Serial.println("\nFalha na conexão Wi-Fi!");
   }
 
