@@ -23,7 +23,7 @@ const char* serverName = "https://aquametrics-api.vercel.app/documentos";
 const float OFFSET = 0.4;  //variavel pra calibrar (testar com a agua destilada e fazer a diferenca pra dar 7)
 const int SAMPLES = 10; //quantidade de veses que ele vai dividir pra fazer a media da leitura
 
-const int sensorPinTDS = A0;  // Pino do sensor TDS
+const int sensorPinTDS = 32;  // Pino do sensor TDS
 
 OneWire oneWire(TEMPERATURE_PIN);
 DallasTemperature sensors(&oneWire);
