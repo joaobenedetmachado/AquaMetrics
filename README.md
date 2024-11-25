@@ -48,6 +48,8 @@ Este projeto desenvolve uma plataforma IoT para monitoramento em tempo real da q
 - **HTML, CSS e JavaScript** para a interface web
 - **Python** no backend para comunicação entre ESP32 e MongoDB
 
+<a href="https://www.canva.com/design/DAGW3XHFJzk/bS9NHGKx44hPxZ9JKI5tEQ/edit?utm_content=DAGW3XHFJzk&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton">link apresentação</a>
+
 ---
 
 ##
